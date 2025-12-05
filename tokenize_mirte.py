@@ -97,28 +97,30 @@ def merge_dicts(counted_tokens, vocab_counted):
     counted_tokens.update(vocab_counted)
     return counted_tokens
 
+
 def sort_token_dict(counted_tokens):
     counter_sorted = dict(sorted(counted_tokens.items(), key = lambda item: item[1]))
     sorted_reversed = dict(reversed(list(counter_sorted.items())))
     # print(sorted_reversed)
     return sorted_reversed
-
                 
 
 def byte_pair_encoding(token_set, top_tokens):
     tokens_before = len(token_set) # Aantal tokens voor het optimaliseren
+    best_tokens = []
 
     for index, i in enumerate(token_set.keys()):
         if index > top_tokens:
-            return 
-
-        print(i)
+            print(best_tokens)
+            return best_tokens
+        best_tokens.append(i)
+    return best_tokens
+        # print(best_tokens)
+        # print(i)
     # for value in range(0, top_tokens):
     #     print(value)
         # print(token_set[value])
         #d = dict([(k, v) for k, v in d.items() if v != value])
-    # print(d)
-
 
 
 if __name__ == "__main__":
