@@ -23,9 +23,9 @@
 # Breng klassen en functies die van algemeen belang zijn onder in een aparte module nlp.py die gedeeld is over alle lessen, 
 # en importeer deze in je script. Je script kan daarnaast eigen klassen en functies definiëren voor eigen gebruik.
 
-
 import sys
 import numpy
+from collections import Counter
 
 def input_parser():
     text_path = None
@@ -37,6 +37,7 @@ def input_parser():
             text_path = sys.argv[1]
     return text_path
 
+
 def file_reader(text_path):
     word_list = []
     with open(text_path) as text:
@@ -44,6 +45,7 @@ def file_reader(text_path):
             i = i.lower().strip() # Maak een lijst van woorden een maak ze allemaal lowercase.
             word_list.append(i)
     return word_list
+
 
 def get_vocabulary(word_list):
     """
@@ -54,29 +56,76 @@ def get_vocabulary(word_list):
         for char in word:
             for i in char:
                 vocabulary.add(i)
-    return vocabulary
 
-def tokenizer(word_list):
-    token_set = dict()
+
+    vocab_count = dict()
     for word in word_list:
-        for i in range(0,len(word),2):
+        for char in word:
+            if char in vocab_count:
+                vocab_count[char] = vocab_count.get(char, 0) + 1
+            else:
+                vocab_count[char] = 1
+    # print(vocab_count)
+    return vocab_count
+
+
+def tokenizer(word_list, vocabulary):
+    token_set = set()
+    
+    for word in word_list:
+        for i in range(0, len(word), 2):
             two_chars = word[i:i+2]
-            token_set[two_chars] = i
-    # print(token_set)
-    return token_set
+            token_set.add(two_chars)
+
+    counted_tokens = {}
+    for word in word_list:
+        for i in range(0, len(word), 2):
+            two_chars = word[i:i+2]
+            if two_chars in token_set:
+                counted_tokens[two_chars] = counted_tokens.get(two_chars, 0) + 1
+            else:
+                counted_tokens[two_chars] = 1
+    return counted_tokens
+
+
+def merge_dicts(counted_tokens, vocab_counted):
+    """
+    Docstring for merge_dicts
+    :param counted_tokens: dictionary met getelde meerdere char tokens
+    :param vocab_counted: dictionary met getelde chars
+    """
+    counted_tokens.update(vocab_counted)
+    return counted_tokens
+
+def sort_token_dict(counted_tokens):
+    counter_sorted = dict(sorted(counted_tokens.items(), key = lambda item: item[1]))
+    sorted_reversed = dict(reversed(list(counter_sorted.items())))
+    # print(sorted_reversed)
+    return sorted_reversed
+
                 
 
 def byte_pair_encoding(token_set, top_tokens):
     tokens_before = len(token_set) # Aantal tokens voor het optimaliseren
-    counter = {}
-    res = dict(sorted(token_set.items(), key = lambda item: item[1]))
-    res2 = dict(reversed(list(res.items())))
-    for token in token_set:
-        counter[token] = counter.get(token,0) + 1
+
+    for index, i in enumerate(token_set.keys()):
+        if index > top_tokens:
+            return 
+
+        print(i)
+    # for value in range(0, top_tokens):
+    #     print(value)
+        # print(token_set[value])
+        #d = dict([(k, v) for k, v in d.items() if v != value])
+    # print(d)
+
+
 
 if __name__ == "__main__":
     text_path = input_parser()
     word_list = file_reader(text_path)
     vocabulary = get_vocabulary(word_list)
-    token_set = tokenizer(word_list)
-    token_list = byte_pair_encoding(token_set, 50)
+    token_set = tokenizer(word_list, vocabulary)
+    counted_tokens = merge_dicts(token_set, vocabulary)
+    sorted_reversed = sort_token_dict(counted_tokens)
+    token_list = byte_pair_encoding(sorted_reversed, 10)
