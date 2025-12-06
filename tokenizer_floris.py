@@ -51,7 +51,7 @@ def get_vocabulary(word_list):
             else:
                 vocab_count[char] = 1
     # print(vocab_count)
-    return vocab_count
+    return vocab_count, vocabulary
 
 
 def tokenizer(word_list):
@@ -116,6 +116,15 @@ def byte_pair_encoding(word_list, pair_to_merge):
 
     return new_word_list
 
+
+def save_to_file(vocabulary):
+    
+    with open("encoding.enc", "w") as text:
+        text.write(str(vocabulary))
+
+    
+
+
 if __name__ == "__main__":
 
 
@@ -134,7 +143,10 @@ if __name__ == "__main__":
         new_word_list = byte_pair_encoding(word_list,new_token)
         word_list = new_word_list
 
-
-    print(get_vocabulary(new_word_list))
+    
+    aaa, vocabulary = get_vocabulary(new_word_list)
+    save_to_file(vocabulary)
+   # print(get_vocabulary(new_word_list))
+    print(vocabulary)
     print(f"Er zitten {len(get_vocabulary(new_word_list))} unieke tokens in deze tekst.")
 
