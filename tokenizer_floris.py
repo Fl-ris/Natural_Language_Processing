@@ -8,6 +8,8 @@
 import sys
 import numpy
 from collections import Counter
+import pickle
+
 
 def input_parser():
     text_path = None
@@ -117,11 +119,23 @@ def byte_pair_encoding(word_list, pair_to_merge):
     return new_word_list
 
 
-def save_to_file(vocabulary):
+def save_to_file(vocabulary, text_tokens):
     
     with open("encoding.enc", "w") as text:
         text.write(str(vocabulary))
+    with open("story", "w") as text:
+        text.write(str(text_tokens))
+    
+    db = {}
+    db['vocabulary'] = vocabulary
+    db['text_tokens'] = text_tokens
+    
+    dbfile = open('Vocab_Text_Tokens', 'ab')
+    
+    pickle.dump(db, dbfile)                    
+    dbfile.close()
 
+    pickle.dumps(vocabulary)
     
 
 
@@ -145,8 +159,8 @@ if __name__ == "__main__":
 
     
     aaa, vocabulary = get_vocabulary(new_word_list)
-    save_to_file(vocabulary)
-   # print(get_vocabulary(new_word_list))
-    print(vocabulary)
+    save_to_file(vocabulary, new_word_list)
+    print(get_vocabulary(new_word_list))
+    #print(new_word_list)
     print(f"Er zitten {len(get_vocabulary(new_word_list))} unieke tokens in deze tekst.")
 
