@@ -24,7 +24,6 @@
 # en importeer deze in je script. Je script kan daarnaast eigen klassen en functies definiëren voor eigen gebruik.
 
 import sys
-import numpy
 from collections import Counter
 
 def input_parser():
@@ -32,18 +31,21 @@ def input_parser():
     if(len(sys.argv) > 1):
         if(sys.argv[1] == "-h" or sys.argv[1] == "--help"):
             print("Gebruik:")
-            print("input bestand blablabla...")
+            print("Nog aanvullen")
         else:
             text_path = sys.argv[1]
-    return text_path
+            min_frequency = int(sys.argv[2])
+    return text_path, min_frequency
 
 
 def file_reader(text_path):
     word_list = []
     with open(text_path) as text:
-        for i in text:
-            i = i.lower().strip() # Maak een lijst van woorden een maak ze allemaal lowercase.
-            word_list.append(i)
+        for line in text:
+            words_split = line.strip().split()
+            for i in words_split:
+                i = list(i.lower())
+                word_list.append(i)
     return word_list
 
 
@@ -54,8 +56,7 @@ def get_vocabulary(word_list):
     vocabulary = set()
     for word in word_list:
         for char in word:
-            for i in char:
-                vocabulary.add(i)
+            vocabulary.add(char)
 
 
     vocab_count = dict()
@@ -65,69 +66,89 @@ def get_vocabulary(word_list):
                 vocab_count[char] = vocab_count.get(char, 0) + 1
             else:
                 vocab_count[char] = 1
-    # print(vocab_count)
-    return vocab_count
+    return vocab_count, vocabulary
 
 
-def tokenizer(word_list, vocabulary):
-    token_set = set()
+def tokenizer(word_list):
+    token_count = {}
     
     for word in word_list:
-        for i in range(0, len(word), 2):
-            two_chars = word[i:i+2]
-            token_set.add(two_chars)
-
-    counted_tokens = {}
-    for word in word_list:
-        for i in range(0, len(word), 2):
-            two_chars = word[i:i+2]
-            if two_chars in token_set:
-                counted_tokens[two_chars] = counted_tokens.get(two_chars, 0) + 1
-            else:
-                counted_tokens[two_chars] = 1
-    return counted_tokens
+        for i in range(len(word) -1):
+            pair = (word[i], word[i+1])
+            token_count[pair] = token_count.get(pair, 0) + 1
+    return token_count
 
 
-def merge_dicts(counted_tokens, vocab_counted):
-    """
-    Docstring for merge_dicts
-    :param counted_tokens: dictionary met getelde meerdere char tokens
-    :param vocab_counted: dictionary met getelde chars
-    """
-    counted_tokens.update(vocab_counted)
-    return counted_tokens
+def sort_token(token_count, min_frequency):
+    most_frequent_pair = None
 
+    for pair, count in token_count.items():
+        if count > min_frequency:
+            most_frequent_pair = pair
 
-def sort_token_dict(counted_tokens):
-    counter_sorted = dict(sorted(counted_tokens.items(), key = lambda item: item[1]))
-    sorted_reversed = dict(reversed(list(counter_sorted.items())))
-    # print(sorted_reversed)
-    return sorted_reversed
+    return most_frequent_pair
                 
 
-def byte_pair_encoding(token_set, top_tokens):
-    tokens_before = len(token_set) # Aantal tokens voor het optimaliseren
-    best_tokens = []
+def byte_pair_encoding(word_list, pair_to_merge):
+    merged_symbol = pair_to_merge[0] + pair_to_merge[1]
+    new_word_list = []
 
-    for index, i in enumerate(token_set.keys()):
-        if index > top_tokens:
-            print(best_tokens)
-            return best_tokens
-        best_tokens.append(i)
-    return best_tokens
-        # print(best_tokens)
-        # print(i)
-    # for value in range(0, top_tokens):
-    #     print(value)
-        # print(token_set[value])
-        #d = dict([(k, v) for k, v in d.items() if v != value])
+    for word in word_list:
+        i = 0
+        new_word = []
+
+        while i < len(word):
+            if i < len(word) - 1 and (word[i], word[i + 1]) == pair_to_merge:
+                new_word.append(merged_symbol)
+                i += 2
+            else:
+                new_word.append(word[i])
+                i += 1
+
+        new_word_list.append(new_word)
+    return new_word_list
+
+
+def write_to_enc(merges, path):
+    with open(path, "w", encoding = "utf-8") as f:
+        f.write("# BPE merges\n")
+        for a, b in merges:
+            f.write(f"{a} {b}\n")
+
+
+def encode_tok():
+    pass
+
+
+def decode_tok():
+    pass
 
 
 if __name__ == "__main__":
-    text_path = input_parser()
-    word_list = file_reader(text_path)
-    vocabulary = get_vocabulary(word_list)
-    token_set = tokenizer(word_list, vocabulary)
-    counted_tokens = merge_dicts(token_set, vocabulary)
-    sorted_reversed = sort_token_dict(counted_tokens)
-    token_list = byte_pair_encoding(sorted_reversed, 10)
+    textpath, min_frequency = input_parser()
+    word_list = file_reader(textpath)
+    
+
+    merges = []
+
+    for i in range(9999):
+        token_set = tokenizer(word_list)
+        new_token = sort_token(token_set, min_frequency)
+
+        if new_token == None:
+            break
+
+        merges.append(new_token)
+        new_word_list = byte_pair_encoding(word_list, new_token)
+        word_list = new_word_list
+    
+    vocab_count, vocabulary = get_vocabulary(word_list)
+    write_to_enc(merges, "write_test.enc")
+    print(vocabulary)
+
+    print(f"Er zitten {len(vocabulary)} unieke tokens in deze tekst.")
+
+
+# TO DO:
+# txt -> tok
+# tok -> txt
