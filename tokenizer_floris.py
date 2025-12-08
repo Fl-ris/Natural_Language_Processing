@@ -31,6 +31,7 @@ def file_reader(text_path):
             words_split = line.strip().split()
             for i in words_split:
                 i = list(i.lower())
+                i.append(" ") # Een spatie na elk woord, anders alle text aan elkaar vast...
                 word_list.append(i)
     return word_list
 
@@ -61,9 +62,7 @@ def tokenizer(word_list):
     
     for word in word_list:
         for i in range(len(word) - 1):
-            # Tuple paar:
             pair = (word[i], word[i+1])
-            
             if pair in counted_tokens:
                 counted_tokens[pair] += 1
             else:
