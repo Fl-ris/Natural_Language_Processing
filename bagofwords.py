@@ -34,33 +34,31 @@ def create_bow_vector(sentence, vocab):
     vocab_list = list(vocab)
     vocab_to_idx = {word: i for i, word in enumerate(vocab_list)}
     vector = [0] * len(vocab_to_idx)
+
     for word in sentence:
         token = "".join(word)
         if token in vocab_to_idx:
-            idx = vocab_to_idx[token]
-            vector[idx] += 1
-            return vector 
+            vector[vocab_to_idx[token]] += 1
+    return vector 
 
+documents = [pre_process(sentence) for sentence in corpus]
+flat_tokens = [token for doc in documents for token in doc]
 
-processed_corpus = [pre_process(sentence) for sentence in corpus]
-processed_corpus = [word for sent in processed_corpus for word in sent]
 merges = []
-
 min_frequency = 2
 
-for i in range(9999):
-    token_set = tokenizer(processed_corpus)
+for _ in range(9999):
+    token_set = tokenizer(flat_tokens)
     new_token = sort_token(token_set, min_frequency)
-    if new_token == None:
-        break 
+    if new_token is None:
+        break
     
     merges.append(new_token)
-    new_word_list = byte_pair_encoding(processed_corpus, new_token) 
-    processed_corpus = new_word_list
+    flat_tokens = byte_pair_encoding(flat_tokens, new_token)
 
-vocab_count, vocabulary = get_vocabulary(processed_corpus)
+vocab_count, vocabulary = get_vocabulary(flat_tokens)
 print(vocabulary)
-bow_vectors = [create_bow_vector(sentence, vocabulary)for sentence in processed_corpus]
+bow_vectors = [create_bow_vector(doc, vocabulary)for doc in documents]
 print("Bag of words vectors:")
 for vector in bow_vectors:
     print(vector)
