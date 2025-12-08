@@ -22,43 +22,69 @@ from tokenize_mirte import *
 import math
 import argparse
 
-corpus = ["Python is amazing and fun.", "Python is not just but also powerful", "Learning python is fun!"]
-def pre_process(sentence):
-    word_list = []
-    sentence = sentence.lower().strip().split()
-    word_list = [list(word) for word in sentence]
-    return word_list
+def pre_process(docs):
+    """
+    Deze functie maakt de input klaar voor de verdere stappen.
+    :param docs: een .txt bestand met daarin op elke regel een bestand.
+    """
+    docs = docs.lower().strip()
+    return docs.split()
 
 
-def create_bow_vector(sentence, vocab):
-    vocab_list = list(vocab)
-    vocab_to_idx = {word: i for i, word in enumerate(vocab_list)}
-    vector = [0] * len(vocab_to_idx)
+def count_encoding(doc, vocab):
+    """
+    Encode het opgegeven bestand met frequentie
+    :param doc: een .txt bestand met daarin op elke regel een bestand.
+    :param vocab: een lijst met alle woorden in het bestand.
+    :return vector: een vector met daarin de encoding.
+    """
+    vector = [0] * len(vocab)
+    for token in doc:
+        if token in vocab: 
+            vector[vocab[token]] += 1
+    return vector
 
-    for word in sentence:
-        token = "".join(word)
-        if token in vocab_to_idx:
-            vector[vocab_to_idx[token]] += 1
-    return vector 
 
-documents = [pre_process(sentence) for sentence in corpus]
-flat_tokens = [token for doc in documents for token in doc]
+def apply_bpe(doc, merges):
+    tokens = doc[:]
+    flat_tokens = []
+    for merge in merges:
+        tokens = byte_pair_encoding(tokens, merge)
+    for t in tokens:
+        flat_tokens.append("".join(t))
+    return flat_tokens
 
-merges = []
-min_frequency = 2
 
-for _ in range(9999):
-    token_set = tokenizer(flat_tokens)
-    new_token = sort_token(token_set, min_frequency)
-    if new_token is None:
-        break
+def main():
+    corpus = ["Python is amazing and fun.", "Python is not just but also powerful", "Learning python is fun!"]
+
+    documents = [pre_process(sentence) for sentence in corpus]
+
+    flat_tokens = [token for doc in documents for token in doc]
+
+    merges = []
+    min_frequency = 2
+
+    for _ in range(9999):
+        token_set = tokenizer(flat_tokens)
+        new_token = sort_token(token_set, min_frequency)
+        if new_token is None:
+            break
+        merges.append(new_token)
+        flat_tokens = byte_pair_encoding(flat_tokens, new_token)
     
-    merges.append(new_token)
-    flat_tokens = byte_pair_encoding(flat_tokens, new_token)
+    vocab_count, vocabulary = get_vocabulary(flat_tokens)
+    vocab_to_idx = {token: i for i, token in enumerate(vocabulary)}
 
-vocab_count, vocabulary = get_vocabulary(flat_tokens)
-print(vocabulary)
-bow_vectors = [create_bow_vector(doc, vocabulary)for doc in documents]
-print("Bag of words vectors:")
-for vector in bow_vectors:
-    print(vector)
+    bpe_documents = [apply_bpe(doc, merges) for doc in documents]
+
+    bow_vectors = [count_encoding(doc, vocab_to_idx) for doc in bpe_documents]
+
+    print("Vocabulary: ", vocabulary)
+    print("Bag of words vectors:")
+    for vec in bow_vectors:
+        print(vec)
+
+if __name__ == "__main__":
+    main()
+    
