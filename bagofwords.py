@@ -1,14 +1,16 @@
-from tokenize_mirte import *
+from tokenizer_floris import *
 import math
 import argparse
+
 
 def pre_process(docs):
     """
     Deze functie maakt de input klaar voor de verdere stappen.
     :param docs: een .txt bestand met daarin op elke regel een bestand.
     """
-    docs = docs.lower().strip()
-    return docs.split()
+    line = docs.lower().strip()
+    words = line.split()
+    return [list(word) for word in words]
 
 
 def count_encoding(doc, vocab):
@@ -20,7 +22,7 @@ def count_encoding(doc, vocab):
     """
     vector = [0] * len(vocab)
     for token in doc:
-        if token in vocab: 
+        if token in vocab:
             vector[vocab[token]] += 1
     return vector
 
@@ -82,8 +84,9 @@ def apply_bpe(doc, merges):
     flat_tokens = []
     for merge in merges:
         tokens = byte_pair_encoding(tokens, merge)
-    for t in tokens:
-        flat_tokens.append("".join(t))
+    for word in tokens:
+        for piece in word:
+            flat_tokens.append(piece)
     return flat_tokens
 
 
@@ -94,7 +97,7 @@ def write_to_bow(vocabulary, vectors, path):
     :param vectors: de vectoren met daarin de bag of words representatie.
     :param path: het pad wanneer het bestand wordt geschreven.
     """
-    with open(path, "w", encoding = "utf-8") as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write("Gebruikte vocabulary:\n")
         f.write(f"{vocabulary}\n\n")
         f.write("Bag of words representaties:\n")
@@ -103,17 +106,17 @@ def write_to_bow(vocabulary, vectors, path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description = "Bag of words encoder")
-    parser.add_argument("filepath", nargs = "+", help = "Path(s) to corpus text file")
-    parser.add_argument("--encoding", type = str, choices = ["multi-hot", "count", "tfidf"],
-                        default = "count", help = "Type of encoding")
-    parser.add_argument("--minfreq", type = int,
-                        default = 2, help = "Minimum frequency of tokens in the text")
+    parser = argparse.ArgumentParser(description="Bag of words encoder")
+    parser.add_argument("filepath", nargs="+", help="Path(s) to corpus text file")
+    parser.add_argument("--encoding", type=str, choices=["multi-hot", "count", "tfidf"],
+                        default="count", help="Type of encoding")
+    parser.add_argument("--minfreq", type=int,
+                        default=2, help="Minimum frequency of tokens in the text")
     args = parser.parse_args()
-    
+
     all_documents = []
     for path in args.filepath:
-        with open(path, "r", encoding = "utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             all_documents.append([pre_process(line) for line in f])
 
     flat_tokens = [token for doc_list in all_documents for doc in doc_list for token in doc]
@@ -123,12 +126,11 @@ def main():
 
     for _ in range(9999):
         token_set = tokenizer(flat_tokens)
-        new_token = sort_token(token_set, min_frequency)
+        new_token = sort_and_return_token(token_set, min_frequency)
         if new_token is None:
             break
         merges.append(new_token)
         flat_tokens = byte_pair_encoding(flat_tokens, new_token)
-    
     vocab_count, vocabulary = get_vocabulary(flat_tokens)
     vocab_to_idx = {token: i for i, token in enumerate(vocabulary)}
 
@@ -140,7 +142,7 @@ def main():
         idf_scores = compute_idf([doc for file_docs in bpe_per_file for doc in file_docs], vocab_to_idx)
     else:
         idf_scores = None
-    
+
     for path, bpe_docs in zip(args.filepath, bpe_per_file):
         vectors = []
         for doc in bpe_docs:
@@ -150,12 +152,12 @@ def main():
                 vectors.append(count_encoding(doc, vocab_to_idx))
             elif args.encoding == "tfidf":
                 vectors.append(tf_idf_vector(doc, vocab_to_idx, idf_scores))
-        
+
         out_path = path.replace(".txt", ".bow")
         write_to_bow(vocabulary, vectors, out_path)
         print(f"Bag of words met het bestand: {path}")
         print(f"Vocabulary: {vocabulary}\n")
-        print(f"Bag of words vectors ({args.encoding}):")
+        print(f"Bag of words vectors ({args.encoding}): ")
         for vec in vectors:
             print(vec)
         print(f"\nBOW succesvol geschreven naar {out_path}")
