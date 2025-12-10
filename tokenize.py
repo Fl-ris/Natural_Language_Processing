@@ -1,7 +1,7 @@
 ##################################
 ### Author: Mirte D, Floris M  ###
 ### Date: 04-12-2025           ###
-### Version: 0.2               ###
+### Version: 0.3               ###
 ##################################
 
 
@@ -9,7 +9,9 @@ import sys
 import numpy
 from collections import Counter
 import pickle
-import nlp
+from nlp import (file_reader, get_vocabulary, tokenizer,
+                 sort_and_return_token, byte_pair_encoding,
+                 save_encoding, load_encoding)
 
 
 def input_parser():
@@ -44,33 +46,33 @@ def input_parser():
     
     
 def learn_encoding(txt_path, min_freq, enc_path):
-    word_list = nlp.file_reader(txt_path)
+    word_list = file_reader(txt_path)
 
     for _ in range(9999):
-        token_counts = nlp.tokenizer(word_list)
-        pair = nlp.sort_and_return_token(token_counts, min_freq)
+        token_counts = tokenizer(word_list)
+        pair = sort_and_return_token(token_counts, min_freq)
         if pair is None:
             break
-        word_list = nlp.byte_pair_encoding(word_list, pair)
+        word_list = byte_pair_encoding(word_list, pair)
 
-    vocab_counts, vocab_set = nlp.get_vocabulary(word_list)
-    nlp.save_encoding(vocab_set, word_list, enc_path)
+    vocab_counts, vocab_set = get_vocabulary(word_list)
+    save_encoding(vocab_set, word_list, enc_path)
 
     print(f"Encoding opgeslagen in '{enc_path}'.")
     print(f"{len(vocab_set)} unieke tokens gevonden.")
 
 def apply_encoding(txt_path, enc_path):
-    enc_db = nlp.load_encoding(enc_path)
+    enc_db = load_encoding(enc_path)
     vocab = enc_db["vocabulary"]
-    word_list = nlp.file_reader(txt_path)
+    word_list = file_reader(txt_path)
 
 
     while True:
-        token_counts = nlp.tokenizer(word_list)
-        pair = nlp.sort_and_return_token(token_counts, min_freq=1)
+        token_counts = tokenizer(word_list)
+        pair = sort_and_return_token(token_counts, min_freq=1)
         if pair is None:
             break
-        word_list = nlp.byte_pair_encoding(word_list, pair)
+        word_list = byte_pair_encoding(word_list, pair)
 
     tok_path = txt_path.rsplit(".", 1)[0] + ".tok"
     with open(tok_path, "w") as f:
@@ -80,7 +82,7 @@ def apply_encoding(txt_path, enc_path):
 
 
 def decode_tokens(tok_path, enc_path):
-    enc_db = nlp.load_encoding(enc_path)
+    enc_db = load_encoding(enc_path)
     vocab = enc_db["vocabulary"]
 
     with open(tok_path, "r") as file:

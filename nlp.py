@@ -74,6 +74,8 @@ def sort_and_return_token(counted_tokens, min_freq):
     return new_token[0]
             
 def byte_pair_encoding(word_list, pair_to_merge):
+    """Voer het byte pair encoding algorithme uit:"""
+    
     new_word_list = []
     merged = pair_to_merge[0] + pair_to_merge[1]
 
@@ -123,16 +125,11 @@ def load_encoding(enc_path):
         return pickle.load(f)
 
 
-
-# ----------------------------------------------------------------------
-# N‑gram helpers (originally in ngram.py)
-# ----------------------------------------------------------------------
 def flatten_token_lists(token_lists):
-    """Turn a list‑of‑lists (words → list of chars) into a flat token list."""
+    "Van list of lists naar list"
     return [token for word in token_lists for token in word]
 
 def train_ngram_model(token_list, n=3):
-    """Return a nested dict {(n‑1)-gram → {next_token: prob}}."""
     transitions = defaultdict(Counter)
     context = n - 1
     for i in range(len(token_list) - context):
