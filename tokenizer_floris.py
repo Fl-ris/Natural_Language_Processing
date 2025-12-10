@@ -107,7 +107,7 @@ def byte_pair_encoding(word_list, pair_to_merge):
         i = 0
         new_word = []
         while i < len(word):
-            if i < len(word)-1 and word[i] == new_token[0] and word[i+1] == new_token[1]:
+            if i < len(word)-1 and word[i] == pair_to_merge[0] and word[i+1] == pair_to_merge[1]:
                 new_word.append(merged)
                 i += 2
             else:
