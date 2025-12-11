@@ -1,3 +1,9 @@
+##################################
+### Author: Mirte D            ###
+### Date: 11-12-2025           ###
+### Version: 0.1               ###
+##################################
+
 from tokenize import *
 from nlp import *
 import math
