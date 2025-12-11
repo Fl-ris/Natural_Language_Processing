@@ -4,7 +4,7 @@
 ### Version: 0.1               ###
 ##################################
 
-from tokenize import *
+from tokenizer import *
 from nlp import *
 import math
 import argparse
