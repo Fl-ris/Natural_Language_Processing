@@ -10,8 +10,13 @@ import sys
 import pickle
 import random
 from collections import Counter, defaultdict
+from nlp import load_encoding, flatten_token_lists, train_ngram_model
 
 def input_parser():
+    """
+    Verkrijg commandline argumenten:
+    """
+    
     pickle_path = None
     if(len(sys.argv) > 1):
         if(sys.argv[1] == "-h" or sys.argv[1] == "--help"):
@@ -23,43 +28,22 @@ def input_parser():
 
 
 def file_reader(pickle_path):
+    """
+    Lees pickle met vocab en text.
+    """
+    if not pickle_path:
+        pickle_path = "encoding.enc"
 
-    dbfile = open("Vocab_Text_Tokens", "rb")    
-    db = pickle.load(dbfile)
-
-    dbfile.close()
+    db = load_encoding(pickle_path)
 
     vocabulary_list = list(db["vocabulary"])
-    story_text = list(db["text_tokens"])
+    story_text = db["text_tokens"]
 
-    # Omdat de tokens in een lijst van lijsten staat: 
-    story_token_list = [token for word in story_text for token in word]
+    story_token_list = flatten_token_lists(story_text)
 
     return vocabulary_list, story_token_list
 
-def train_ngram_model(story_token_list, n=3):
-    """
-    Returns: Geneste dictionary {(ngram): {next_token: probability}}
-    """
 
-    transitions = defaultdict(Counter)
-    context_size = n - 1
-
-    # Tel hoevaak een token voorkomt:
-    for i in range(len(story_token_list) - context_size):
-        ngram = tuple(story_token_list[i : i + context_size]) 
-        next_token = story_token_list[i + context_size]
-        transitions[ngram][next_token] += 1
-
-    # Counts naar waarschijnlijkheden:
-    model = {}
-    for ngram, counter in transitions.items():
-        total_count = sum(counter.values())
-        model[ngram] = {}
-        for token, count in counter.items():
-            model[ngram][token] = count / total_count
-
-    return model
 
 def generate_text(model, n, length):
 
@@ -92,3 +76,4 @@ if __name__ == "__main__":
 
     generated_text = generate_text(model, n=3, length=100)
     print(generated_text)
+ 

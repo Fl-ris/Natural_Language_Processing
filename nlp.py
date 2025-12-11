@@ -4,6 +4,37 @@ import numpy as np
 
 from sklearn.neural_network import MLPClassifier
 
+def train_ngram_model(story_token_list, n=3):
+    """
+    Returns: Geneste dictionary {(ngram): {next_token: probability}}
+    """
+
+    transitions = defaultdict(Counter)
+    context_size = n - 1
+
+    # Tel hoevaak een token voorkomt:
+    for i in range(len(story_token_list) - context_size):
+        ngram = tuple(story_token_list[i : i + context_size]) 
+        next_token = story_token_list[i + context_size]
+        transitions[ngram][next_token] += 1
+
+    # Counts naar waarschijnlijkheden:
+    model = {}
+    for ngram, counter in transitions.items():
+        total_count = sum(counter.values())
+        model[ngram] = {}
+        for token, count in counter.items():
+            model[ngram][token] = count / total_count
+
+    return model
+
+def save_tokens(path, tokens):
+    """
+    Sla tokens op in een bestand.
+    """
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(" ".join(tokens))
+
 def file_reader(text_path):
     word_list = []
     with open(text_path) as text:
@@ -131,19 +162,21 @@ def flatten_token_lists(token_lists):
     "Van list of lists naar list"
     return [token for word in token_lists for token in word]
 
-def train_ngram_model(token_list, n=3):
-    transitions = defaultdict(Counter)
-    context = n - 1
-    for i in range(len(token_list) - context):
-        ctx = tuple(token_list[i : i + context])
-        nxt = token_list[i + context]
-        transitions[ctx][nxt] += 1
+# def train_ngram_model(token_list, n=3):
+#     transitions = defaultdict(Counter)
+#     context = n - 1
+#     for i in range(len(token_list) - context):
+#         ctx = tuple(token_list[i : i + context])
+#         nxt = token_list[i + context]
+#         transitions[ctx][nxt] += 1
 
-    model = {}
-    for ctx, ctr in transitions.items():
-        total = sum(ctr.values())
-        model[ctx] = {tok: cnt / total for tok, cnt in ctr.items()}
-    return model
+#     model = {}
+#     for ctx, ctr in transitions.items():
+#         total = sum(ctr.values())
+#         model[ctx] = {tok: cnt / total for tok, cnt in ctr.items()}
+#     return model
+
+
 def make_cbow_examples_ids(token_ids, window):
     """
     Bouw CBOW-training op basis van een lijst token-ID's (ints).

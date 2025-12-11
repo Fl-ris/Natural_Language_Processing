@@ -73,12 +73,14 @@ def apply_encoding(txt_path, enc_path):
         if pair is None:
             break
         word_list = byte_pair_encoding(word_list, pair)
+        
 
     tok_path = txt_path.rsplit(".", 1)[0] + ".tok"
     with open(tok_path, "w") as f:
         for w in word_list:
             f.write("".join(w))
     print(f"Tokens opgeslagen in '{tok_path}'.")
+    return word_list
 
 
 def decode_tokens(tok_path, enc_path):
@@ -105,11 +107,13 @@ def decode_tokens(tok_path, enc_path):
         if not changed:
             break
 
+
     txt = "".join(tokens).replace("  ", "\n")
     txt_path = tok_path.rsplit(".", 1)[0] + ".txt"
     with open(txt_path, "w", encoding="utf-8") as file:
         file.write(txt)
     print(f"Tekst teruggeconverteerd naar '{txt_path}'.")
+    return vocab
     
     
 if __name__ == "__main__":
