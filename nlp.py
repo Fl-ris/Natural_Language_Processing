@@ -216,6 +216,7 @@ def train_cbow_mlp(x, y, hidden_dim):
         solver="adam",
         max_iter=20,
         random_state=0,
+        verbose=True,
     )
     clf.fit(x, y)
     return clf
